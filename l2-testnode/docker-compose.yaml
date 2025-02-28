@@ -10,7 +10,7 @@ services:
     entrypoint: /usr/local/bin/nitro
     environment:
       - HEAT_BEAT_PRIVATE_KEY=$HEAT_BEAT_PRIVATE_KEY
-      - HEAT_BEAT_LIMIT_NUM=${$HEAT_BEAT_LIMIT_NUM:10}
+      - HEAT_BEAT_LIMIT_NUM=${HEAT_BEAT_LIMIT_NUM:10}
     ports:
       - "0.0.0.0:8547:8547"
       - "0.0.0.0:8548:8548"
