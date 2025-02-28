@@ -17,12 +17,12 @@ direnv allow
 
 ### look address
 ```shell
-./run_l2.bash script print-address --account validator
+./test-node.bash script print-address --account funnel
 ```
 
 ### look address private-key
 ```shell
-./run_l2.bash script print-private-key --account sequencer
+./test-node.bash script print-private-key --account sequencer
 ```
 
 Initialize the node 

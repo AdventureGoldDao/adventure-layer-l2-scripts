@@ -10,7 +10,7 @@ services:
     entrypoint: /usr/local/bin/nitro
     environment:
       - HEAT_BEAT_PRIVATE_KEY=$HEAT_BEAT_PRIVATE_KEY
-      - HEAT_BEAT_LIMIT_NUM=${HEAT_BEAT_LIMIT_NUM:10}
+      - HEAT_BEAT_LIMIT_NUM=$HEAT_BEAT_LIMIT_NUM
     ports:
       - "0.0.0.0:8547:8547"
       - "0.0.0.0:8548:8548"
@@ -154,6 +154,10 @@ services:
 
   scripts:
     build: scripts/
+    environment:
+      - L1_RPC_URL=$L1_RPC_URL
+      - L1_MNEMONIC=$L1_MNEMONIC
+      - L2_CHAIN_ID=$L2_CHAIN_ID
     volumes:
       - "l1keystore:/home/user/l1keystore"
       - "config:/config"
@@ -177,7 +181,7 @@ services:
         TOKEN_BRIDGE_BRANCH: ${TOKEN_BRIDGE_BRANCH:-}
     environment:
       - ARB_URL=http://sequencer:8547
-      - ETH_URL=http://geth:8545
+      - ETH_URL=$L1_HTTP_RPC_URL
     volumes:
       - "tokenbridge-data:/workspace"
       - /var/run/docker.sock:/var/run/docker.sock
