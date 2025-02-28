@@ -2,7 +2,7 @@ services:
   redis:
     image: redis:6.2.6
     ports:
-      - "127.0.0.1:6379:6379"
+      - "0.0.0.0:6379:6379"
 
   sequencer:
     pid: host # allow debugging
@@ -10,17 +10,17 @@ services:
     entrypoint: /usr/local/bin/nitro
     environment:
       - HEAT_BEAT_PRIVATE_KEY=$HEAT_BEAT_PRIVATE_KEY
+      - HEAT_BEAT_LIMIT_NUM=${$HEAT_BEAT_LIMIT_NUM:10}
     ports:
-      - "0.0.0.0:8587:8547"
-      - "0.0.0.0:8588:8548"
+      - "0.0.0.0:8547:8547"
+      - "0.0.0.0:8548:8548"
       - "0.0.0.0:9642:9642"
     volumes:
       - "seqdata:/home/user/.arbitrum/local/nitro"
       - "l1keystore:/home/user/l1keystore"
       - "config:/config"
       - "tokenbridge-data:/tokenbridge-data"
-    command: --conf.file /config/sequencer_config.json --node.feed.output.enable --node.feed.output.port 9642  --http.api net,web3,eth,txpool,debug --ipc.path="/home/user/.arbitrum/arbitrum.ipc" --node.seq-coordinator.my-url  ws://sequencer:8548 --graphql.enable --graphql.vhosts * --graphql.corsdomain *
-
+    command: --conf.file /config/sequencer_config.json --node.feed.output.enable --node.feed.output.port 9642  --http.api net,web3,eth,txpool,debug --node.seq-coordinator.my-url  ws://sequencer:8548 --graphql.enable --graphql.vhosts * --graphql.corsdomain *
 
   sequencer_b:
     pid: host # allow debugging
@@ -154,10 +154,6 @@ services:
 
   scripts:
     build: scripts/
-    environment:
-      - L1_RPC_URL=$L1_RPC_URL
-      - L1_MNEMONIC=$L1_MNEMONIC
-      - L2_CHAIN_ID=$L2_CHAIN_ID
     volumes:
       - "l1keystore:/home/user/l1keystore"
       - "config:/config"
@@ -181,7 +177,7 @@ services:
         TOKEN_BRIDGE_BRANCH: ${TOKEN_BRIDGE_BRANCH:-}
     environment:
       - ARB_URL=http://sequencer:8547
-      - ETH_URL=$L1_HTTP_RPC_URL
+      - ETH_URL=http://geth:8545
     volumes:
       - "tokenbridge-data:/workspace"
       - /var/run/docker.sock:/var/run/docker.sock
@@ -198,8 +194,54 @@ services:
       - "config:/config"
       - /var/run/docker.sock:/var/run/docker.sock
 
+  datool:
+    image: nitro-node
+    entrypoint: /usr/local/bin/datool
+    volumes:
+      - "config:/config"
+      - "das-committee-a-data:/das-committee-a"
+      - "das-committee-b-data:/das-committee-b"
+      - "das-mirror-data:/das-mirror"
+
+  das-committee-a:
+    pid: host # allow debugging
+    image: nitro-node
+    entrypoint: /usr/local/bin/daserver
+    ports:
+      - "0.0.0.0:9876:9876"
+      - "0.0.0.0:9877:9877"
+    volumes:
+      - "config:/config"
+      - "das-committee-a-data:/das"
+    command:
+      - --conf.file=/config/l2_das_committee.json
+
+  das-committee-b:
+    pid: host # allow debugging
+    image: nitro-node
+    entrypoint: /usr/local/bin/daserver
+    ports:
+      - "0.0.0.0:8876:9876"
+      - "0.0.0.0:8877:9877"
+    volumes:
+      - "config:/config"
+      - "das-committee-b-data:/das"
+    command:
+      - --conf.file=/config/l2_das_committee.json
+
+  das-mirror:
+    pid: host # allow debugging
+    image: nitro-node
+    entrypoint: /usr/local/bin/daserver
+    ports:
+      - "0.0.0.0:7877:9877"
+    volumes:
+      - "config:/config"
+      - "das-mirror-data:/das"
+    command:
+      - --conf.file=/config/l2_das_mirror.json
+
 volumes:
-  consensus:
   l1keystore:
   seqdata:
   seqdata_b:
@@ -211,5 +253,7 @@ volumes:
   poster-data-b:
   poster-data-c:
   config:
-  postgres-data:
   tokenbridge-data:
+  das-committee-a-data:
+  das-committee-b-data:
+  das-mirror-data:
