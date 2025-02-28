@@ -253,6 +253,8 @@ if [[ "$(docker images -q nitro-node:latest 2> /dev/null)" == "" ]]; then
           git clone --branch $L2_BRANCH git@github.com:AdventureGoldDao/adventure-layer-sharding.git $NITRO_SRC && cd $NITRO_SRC && git submodule update --init --recursive --force && cd contracts && touch scripts/config.ts && yarn install && yarn build:all && cd ../../
         fi
       docker build "$NITRO_SRC" -t nitro-node --target nitro-node
+#      docker pull offchainlabs/nitro-node:v3.2.1-d81324d-dev
+#      docker tag offchainlabs/nitro-node:v3.2.1-d81324d-dev nitro-node
 fi
 
 if $build_utils; then
@@ -296,13 +298,16 @@ if $force_init; then
     docker compose run scripts write-accounts
 
     echo == Funding validator, sequencer, l2owner and user_token_bridge_deployer
-    docker compose run scripts send-l1 --ethamount 1 --to validator --wait
-    docker compose run scripts send-l1 --ethamount 1 --to sequencer --wait
-    docker compose run scripts send-l1 --ethamount 1 --to l2owner --wait
-    docker compose run scripts send-l1 --ethamount 1 --to user_token_bridge_deployer --wait
+#    docker compose run scripts send-l1 --ethamount 1 --to validator --wait
+#    docker compose run scripts send-l1 --ethamount 1 --to sequencer --wait
+#    docker compose run scripts send-l1 --ethamount 1 --to l2owner --wait
+#    docker compose run scripts send-l1 --ethamount 1 --to user_token_bridge_deployer --wait
 
 
     l2ownerAddress=`docker compose run scripts print-address --account l2owner | tail -n 1 | tr -d '\r\n'`
+    sequenceraddress=`docker compose run scripts print-address --account sequencer | tail -n 1 | tr -d '\r\n'`
+    l2ownerKey=`docker compose run scripts print-private-key --account l2owner | tail -n 1 | tr -d '\r\n'`
+    wasmroot=`docker compose run --entrypoint sh sequencer -c "cat /home/user/target/machines/latest/module-root.txt"`
 
     if $l2anytrust; then
         echo "== Writing l2 chain config (anytrust enabled)"
@@ -311,10 +316,6 @@ if $force_init; then
         echo == Writing l2 chain config
         docker compose run scripts --l2owner $l2ownerAddress  write-l2-chain-config
     fi
-
-    sequenceraddress=`docker compose run scripts print-address --account sequencer | tail -n 1 | tr -d '\r\n'`
-    l2ownerKey=`docker compose run scripts print-private-key --account l2owner | tail -n 1 | tr -d '\r\n'`
-    wasmroot=`docker compose run --entrypoint sh sequencer -c "cat /home/user/target/machines/latest/module-root.txt"`
 
     EXTRA_L2_DEPLOY_FLAG=""
     if $l2_custom_fee_token; then
@@ -331,7 +332,7 @@ if $force_init; then
     fi
 
     echo == Deploying L2
-    docker compose run -e DEPLOYER_PRIVKEY=$l2ownerKey -e PARENT_CHAIN_RPC=$L1_HTTP_RPC_URL -e PARENT_CHAIN_ID=$L1_CHAIN_ID -e CHILD_CHAIN_NAME=$CHILD_CHAIN_NAME -e MAX_DATA_SIZE=104857 -e OWNER_ADDRESS=$l2owneraddress -e WASM_MODULE_ROOT=$wasmroot -e SEQUENCER_ADDRESS=$sequenceraddress -e AUTHORIZE_VALIDATORS=10 -e CHILD_CHAIN_CONFIG_PATH="/config/l2_chain_config.json" -e CHAIN_DEPLOYMENT_INFO="/config/deployment.json" -e CHILD_CHAIN_INFO="/config/deployed_chain_info.json" $EXTRA_L2_DEPLOY_FLAG rollupcreator create-rollup-testnode
+    docker compose run -e DEPLOYER_PRIVKEY=$l2ownerKey -e PARENT_CHAIN_RPC=$L1_HTTP_RPC_URL -e PARENT_CHAIN_ID=$L1_CHAIN_ID -e CHILD_CHAIN_NAME=$CHILD_CHAIN_NAME -e MAX_DATA_SIZE=104857 -e OWNER_ADDRESS=$l2ownerAddress -e WASM_MODULE_ROOT=$wasmroot -e SEQUENCER_ADDRESS=$sequenceraddress -e AUTHORIZE_VALIDATORS=10 -e CHILD_CHAIN_CONFIG_PATH="/config/l2_chain_config.json" -e CHAIN_DEPLOYMENT_INFO="/config/deployment.json" -e CHILD_CHAIN_INFO="/config/deployed_chain_info.json" $EXTRA_L2_DEPLOY_FLAG rollupcreator create-rollup-testnode
     docker compose run --entrypoint sh rollupcreator -c "jq [.[]] /config/deployed_chain_info.json > /config/l2_chain_info.json"
 
 
