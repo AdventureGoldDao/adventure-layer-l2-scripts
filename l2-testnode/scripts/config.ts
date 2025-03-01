@@ -192,7 +192,7 @@ function writeConfigs(argv: any) {
             },
         },
         "chain": {
-            "id": process.env.L2_CHAIN_ID as unknown as number,
+            "id": Number(process.env.L2_CHAIN_ID),
             "info-files": [chainInfoFile],
         },
         "node": {
@@ -373,7 +373,7 @@ function writeConfigs(argv: any) {
 
 function writeL2ChainConfig(argv: any) {
     const l2ChainConfig = {
-        "chainId": process.env.L2_CHAIN_ID as unknown as number,
+        "chainId": Number(process.env.L2_CHAIN_ID),
         "homesteadBlock": 0,
         "daoForkSupport": true,
         "eip150Block": 0,
