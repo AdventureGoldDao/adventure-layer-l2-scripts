@@ -250,7 +250,7 @@ fi
 if [[ "$(docker images -q nitro-node:latest 2> /dev/null)" == "" ]]; then
     echo == Building l2
         if [ ! -d "$NITRO_SRC" ]; then
-          git clone --branch $L2_BRANCH git@github.com:AdventureGoldDao/adventure-layer-sharding.git $NITRO_SRC && cd $NITRO_SRC && git submodule update --init --recursive --force && cd contracts && touch scripts/config.ts && yarn install && yarn build:all && cd ../../
+          git clone --branch $L2_BRANCH git@github.com:AdventureGoldDao/adventure-layer-sharding.git $NITRO_SRC && cd $NITRO_SRC  && git submodule update --init --recursive --force
         fi
       docker build "$NITRO_SRC" -t nitro-node --target nitro-node
 #      docker pull offchainlabs/nitro-node:v3.2.1-d81324d-dev
@@ -260,7 +260,7 @@ fi
 if $build_utils; then
   LOCAL_BUILD_NODES="scripts rollupcreator"
   # always build tokenbridge in CI mode to avoid caching issues
-  if $tokenbridge || $l2_token_bridge || $ci; then
+  if $tokenbridge || $ci; then
     LOCAL_BUILD_NODES="$LOCAL_BUILD_NODES tokenbridge"
   fi
 
@@ -335,9 +335,6 @@ if $force_init; then
     docker compose run -e DEPLOYER_PRIVKEY=$l2ownerKey -e PARENT_CHAIN_RPC=$L1_HTTP_RPC_URL -e PARENT_CHAIN_ID=$L1_CHAIN_ID -e CHILD_CHAIN_NAME=$CHILD_CHAIN_NAME -e MAX_DATA_SIZE=104857 -e OWNER_ADDRESS=$l2ownerAddress -e WASM_MODULE_ROOT=$wasmroot -e SEQUENCER_ADDRESS=$sequenceraddress -e AUTHORIZE_VALIDATORS=10 -e CHILD_CHAIN_CONFIG_PATH="/config/l2_chain_config.json" -e CHAIN_DEPLOYMENT_INFO="/config/deployment.json" -e CHILD_CHAIN_INFO="/config/deployed_chain_info.json" $EXTRA_L2_DEPLOY_FLAG rollupcreator create-rollup-testnode
     docker compose run --entrypoint sh rollupcreator -c "jq [.[]] /config/deployed_chain_info.json > /config/l2_chain_info.json"
 
-
-    docker compose up --wait $INITIAL_SEQ_NODES
-
     if $tokenbridge; then
         echo == Deploying L1-L2 token bridge
         deployer_key=`printf "%s" "user_token_bridge_deployer" | openssl dgst -sha256 | sed 's/^.*= //'`
@@ -347,15 +344,6 @@ if $force_init; then
         docker compose run --entrypoint sh tokenbridge -c "cat network.json && cp network.json l1l2_network.json && cp network.json localNetwork.json"
         echo
     fi
-
-    echo == Fund L2 accounts
-    if $l2_custom_fee_token; then
-        docker compose run scripts bridge-native-token-to-l2 --amount 100000 --from user_fee_token_deployer --wait
-        docker compose run scripts send-l2 --ethamount 10000 --from user_fee_token_deployer --wait
-    else
-        docker compose run scripts bridge-funds --ethamount 10 --wait
-    fi
-    docker compose run scripts send-l2 --ethamount 1 --to l2owner --wait
 fi # $force_init
 
 anytrustNodeConfigLine=""
@@ -402,7 +390,15 @@ if $force_init; then
 
     echo == Funding l2 funnel and dev key
     docker compose up --wait $INITIAL_SEQ_NODES
-    docker compose run scripts send-l2 --ethamount 100 --to l2owner --wait
+
+    echo == Fund L2 accounts
+    if $l2_custom_fee_token; then
+        docker compose run scripts bridge-native-token-to-l2 --amount 100000 --from user_fee_token_deployer --wait
+        docker compose run scripts send-l2 --ethamount 10000 --from user_fee_token_deployer --wait
+    else
+        docker compose run scripts bridge-funds --ethamount 10 --wait
+    fi
+    docker compose run scripts send-l2 --ethamount 1000 --to l2owner --wait
 
     echo == Deploy CacheManager on L2
     docker compose run -e CHILD_CHAIN_RPC="http://sequencer:8547" -e CHAIN_OWNER_PRIVKEY=$l2ownerKey rollupcreator deploy-cachemanager-testnode
