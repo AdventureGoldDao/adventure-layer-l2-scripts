@@ -27,7 +27,7 @@ direnv allow
 
 Initialize the node 
 ```bash
-./test-node.bash --init --l2-fee-token --tokenbridge
+./test-node.bash --init
 ```
 
 ```bash
@@ -43,14 +43,8 @@ For help and further scripts, see:
 ## Named accounts
 
 ```bash
-# Set L1 eth > 4 
-./test-node.bash script print-address --account funnel
+./test-node.bash script print-address --account user_token_bridge_deployer
 ```
-
-```bash
-./test-node.bash script print-private-key --account user_token_bridge_deployer
-```
-
 ### cat config
 ```shell
 docker compose run --entrypoint sh sequencer -c "ls /config"
