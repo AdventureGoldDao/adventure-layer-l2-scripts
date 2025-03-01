@@ -275,7 +275,6 @@ function writeConfigs(argv: any) {
         },
         "ws": {
             "addr": "0.0.0.0",
-            "corsdomain": "*"
         },
         "http": {
             "addr": "0.0.0.0",
