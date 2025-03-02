@@ -250,7 +250,7 @@ fi
 if [[ "$(docker images -q nitro-node:latest 2> /dev/null)" == "" ]]; then
     echo == Building l2
         if [ ! -d "$NITRO_SRC" ]; then
-          git clone --branch $L2_BRANCH git@github.com:AdventureGoldDao/adventure-layer-sharding.git $NITRO_SRC && cd $NITRO_SRC  && git submodule update --init --recursive --force
+          git clone --branch $L2_BRANCH git@github.com:AdventureGoldDao/adventure-layer-sharding.git $NITRO_SRC && cd $NITRO_SRC  && git submodule update --init --recursive --force && cd ..
         fi
       docker build "$NITRO_SRC" -t nitro-node --target nitro-node
 #      docker pull offchainlabs/nitro-node:v3.2.1-d81324d-dev
