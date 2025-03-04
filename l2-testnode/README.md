@@ -2,7 +2,7 @@
 
 ### clone code
 ```bash
-git clone git@github.com:AdventureGoldDao/adventure-layer-l2-scripts.git
+git clone --branch adventure-layer-main  git@github.com:AdventureGoldDao/adventure-layer-l2-scripts.git
 cd adventure-layer-l2-scripts/l2-testnode
 ```
 

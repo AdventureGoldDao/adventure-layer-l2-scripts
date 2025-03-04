@@ -2,8 +2,8 @@
 
 set -eu
 
-NITRO_SRC=advl2
-L2_BRANCH=v3.2.1
+NITRO_SRC="advl2"
+DEFAULT_L2_BRANCH="v3.2.1"
 
 DEFAULT_NITRO_CONTRACTS_VERSION="v2.1.1-beta.0"
 DEFAULT_TOKEN_BRIDGE_VERSION="v1.2.2"
@@ -15,13 +15,16 @@ DEFAULT_BOLD_CONTRACTS_VERSION="42d80e40"
 : ${NITRO_CONTRACTS_BRANCH:=$DEFAULT_NITRO_CONTRACTS_VERSION}
 : ${BOLD_CONTRACTS_BRANCH:=$DEFAULT_BOLD_CONTRACTS_VERSION}
 : ${TOKEN_BRIDGE_BRANCH:=$DEFAULT_TOKEN_BRIDGE_VERSION}
+: ${L2_BRANCH:=$DEFAULT_L2_BRANCH}
 export NITRO_CONTRACTS_BRANCH
 export BOLD_CONTRACTS_BRANCH
 export TOKEN_BRIDGE_BRANCH
+export L2_BRANCH
 
 echo "Using NITRO_CONTRACTS_BRANCH: $NITRO_CONTRACTS_BRANCH"
 echo "Using BOLD_CONTRACTS_BRANCH: $BOLD_CONTRACTS_BRANCH"
 echo "Using TOKEN_BRIDGE_BRANCH: $TOKEN_BRIDGE_BRANCH"
+echo "Using L2_BRANCH: $L2_BRANCH"
 
 mydir=`dirname $0`
 cd "$mydir"
@@ -253,8 +256,6 @@ if [[ "$(docker images -q nitro-node:latest 2> /dev/null)" == "" ]]; then
           git clone --branch $L2_BRANCH git@github.com:AdventureGoldDao/adventure-layer-sharding.git $NITRO_SRC && cd $NITRO_SRC  && git submodule update --init --recursive --force && cd ..
         fi
       docker build "$NITRO_SRC" -t nitro-node --target nitro-node
-#      docker pull offchainlabs/nitro-node:v3.2.1-d81324d-dev
-#      docker tag offchainlabs/nitro-node:v3.2.1-d81324d-dev nitro-node
 fi
 
 if $build_utils; then

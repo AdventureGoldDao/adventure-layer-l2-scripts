@@ -11,6 +11,8 @@ export L1_CHAIN_ID=
 export CHILD_CHAIN_NAME=
 export L2_CHAIN_ID=
 
+export L2_BRANCH=
+
 export IMPL_SALT=$(openssl rand -hex 32)
 
 # direnv allow
