@@ -280,8 +280,7 @@ if $force_init; then
         docker compose run scripts redis-init --redundancy
     fi
     docker compose up --wait $INITIAL_SEQ_NODES
-    docker compose run scripts bridge-native-token-to-l2 --amount 100 --from l2owner --wait
-    docker compose run scripts send-l2 --ethamount 10 --to l2owner --wait
+    docker compose run scripts bridge-native-token-to-l2 --amount 10 --from l2owner --wait
 
     echo == Deploy CacheManager on L2
     docker compose run -e CHILD_CHAIN_RPC="http://sequencer:8547" -e CHAIN_OWNER_PRIVKEY=$l2ownerKey rollupcreator deploy-cachemanager-testnode
