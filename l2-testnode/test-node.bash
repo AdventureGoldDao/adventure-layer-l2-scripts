@@ -265,7 +265,7 @@ if $force_init; then
     docker compose run scripts --l2owner $l2ownerAddress  write-l2-chain-config
 
     echo == Deploying L2
-    docker compose run -e DEPLOYER_PRIVKEY=$l2ownerKey -e PARENT_CHAIN_RPC=$L1_HTTP_RPC_URL -e PARENT_CHAIN_ID=$L1_CHAIN_ID -e CHILD_CHAIN_NAME=$CHILD_CHAIN_NAME -e MAX_DATA_SIZE=104857 -e OWNER_ADDRESS=$l2ownerAddress -e WASM_MODULE_ROOT=$wasmroot -e SEQUENCER_ADDRESS=$sequenceraddress -e AUTHORIZE_VALIDATORS=10 -e CHILD_CHAIN_CONFIG_PATH="/config/l2_chain_config.json" -e CHAIN_DEPLOYMENT_INFO="/config/deployment.json" -e CHILD_CHAIN_INFO="/config/deployed_chain_info.json" -e FEE_TOKEN_PRICER_ADDRESS=$ERC20_TOKEN_ADDRESS rollupcreator create-rollup-testnode
+    docker compose run -e DEPLOYER_PRIVKEY=$l2ownerKey -e PARENT_CHAIN_RPC=$L1_HTTP_RPC_URL -e PARENT_CHAIN_ID=$L1_CHAIN_ID -e CHILD_CHAIN_NAME=$CHILD_CHAIN_NAME -e MAX_DATA_SIZE=104857 -e OWNER_ADDRESS=$l2ownerAddress -e WASM_MODULE_ROOT=$wasmroot -e SEQUENCER_ADDRESS=$sequenceraddress -e AUTHORIZE_VALIDATORS=10 -e CHILD_CHAIN_CONFIG_PATH="/config/l2_chain_config.json" -e CHAIN_DEPLOYMENT_INFO="/config/deployment.json" -e CHILD_CHAIN_INFO="/config/deployed_chain_info.json" -e FEE_TOKEN_ADDRESS=$ERC20_TOKEN_ADDRESS rollupcreator create-rollup-testnode
     docker compose run --entrypoint sh rollupcreator -c "jq [.[]] /config/deployed_chain_info.json > /config/l2_chain_info.json"
 
     if $simple; then
@@ -280,7 +280,7 @@ if $force_init; then
         docker compose run scripts redis-init --redundancy
     fi
     docker compose up --wait $INITIAL_SEQ_NODES
-    docker compose run scripts bridge-native-token-to-l2 --amount 10 --from l2owner --wait
+    docker compose run scripts bridge-native-token-to-l2 --amount 100 --from l2owner --wait
 
     echo == Deploy CacheManager on L2
     docker compose run -e CHILD_CHAIN_RPC="http://sequencer:8547" -e CHAIN_OWNER_PRIVKEY=$l2ownerKey rollupcreator deploy-cachemanager-testnode
