@@ -30,8 +30,8 @@ Initialize the node
 
 ### Extract tokens from L1 erc20 to L2
 ```shell
-# cat tokenAddress is native-token in: docker compose run --entrypoint sh scripts -c "cat /config/l3deployment.json"  
- ./test-node.bash script transfer-erc20 -l1 --token 0x***********Cf13dd6706 --amount 1000 --from user_fee_token_deployer --to l2owner
+# cat tokenAddress is native-token in: docker compose run --entrypoint sh scripts -c "cat /config/deployment.json 
+ ./test-node.bash script transfer-erc20 -l1 --token 0x***********Cf13dd6706 --amount 1000 --from l2owner --to adderss_0x454215***
 
  ./test-node.bash script bridge-native-token-to-l2 --amount 10 --from l2owner --wait
 ```
@@ -50,5 +50,3 @@ For help and further scripts, see:
 ```shell
 docker compose run --entrypoint sh sequencer -c "ls /config"
 ```
-
-

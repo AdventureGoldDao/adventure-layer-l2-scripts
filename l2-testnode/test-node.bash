@@ -48,14 +48,9 @@ ci=false
 validate=false
 detach=false
 nowait=false
-tokenbridge=false
 redundantsequencers=0
-l2_custom_fee_token=true
-l2_custom_fee_token_pricer=false
-l2_custom_fee_token_decimals=18
 batchposters=1
 simple=true
-l2anytrust=false
 
 
 
@@ -118,14 +113,6 @@ while [[ $# -gt 0 ]]; do
             validate=true
             shift
             ;;
-        --tokenbridge)
-            tokenbridge=true
-            shift
-            ;;
-        --no-tokenbridge)
-            tokenbridge=false
-            shift
-            ;;
         --no-run)
             run=false
             shift
@@ -150,22 +137,6 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             shift
-            shift
-            ;;
-        --l2-fee-token)
-            l2_custom_fee_token=true
-            shift
-            ;;
-        --l2-fee-token-pricer)
-            if ! $l3_custom_fee_token; then
-                echo "Error: --l2-fee-token-pricer requires --l2-fee-token to be provided."
-                exit 1
-            fi
-            l2_custom_fee_token_pricer=true
-            shift
-            ;;
-        --l2-anytrust)
-            l2anytrust=true
             shift
             ;;
         --redundantsequencers)
@@ -194,18 +165,11 @@ while [[ $# -gt 0 ]]; do
             echo --build           rebuild docker images
             echo --no-build        don\'t rebuild docker images
             echo --init            remove all data, rebuild, deploy new rollup
-            echo --pos             l1 is a proof-of-stake chain \(using prysm for consensus\)
             echo --validate        heavy computation, validating all blocks in WASM
-            echo --l2-fee-token    L3 chain is set up to use custom fee token
-            echo --l2-fee-token-decimals Number of decimals to use for custom fee token. Only valid if also '--l2-fee-token' is provided
-            echo --l2-token-bridge Deploy L1-L2 token bridge.
-            echo --l2-anytrust     run the L2 as an AnyTrust chain
             echo --batchposters    batch posters [0-3]
             echo --redundantsequencers redundant sequencers [0-3]
             echo --detach          detach from nodes after running them
             echo --simple          run a simple configuration. one node as sequencer/batch-poster/staker \(default unless using --dev\)
-            echo --tokenbridge     deploy L1-L2 token bridge.
-            echo --no-tokenbridge  don\'t build or launch tokenbridge
             echo --no-run          does not launch nodes \(useful with build or init\)
             echo --no-simple       run a full configuration with separate sequencer/batch-poster/validator/relayer
             echo --build-utils         rebuild scripts, rollupcreator, token bridge docker images
@@ -260,11 +224,6 @@ fi
 
 if $build_utils; then
   LOCAL_BUILD_NODES="scripts rollupcreator"
-  # always build tokenbridge in CI mode to avoid caching issues
-  if $tokenbridge || $ci; then
-    LOCAL_BUILD_NODES="$LOCAL_BUILD_NODES tokenbridge"
-  fi
-
   if [ "$ci" == true ]; then
     # workaround to cache docker layers and keep using docker-compose in CI
     docker buildx bake --allow=fs=/tmp --file docker-compose.yaml --file docker-compose-ci-cache.json $LOCAL_BUILD_NODES
@@ -298,107 +257,30 @@ if $force_init; then
     echo == Generating l1 keys
     docker compose run scripts write-accounts
 
-    echo == Funding validator, sequencer, l2owner and user_token_bridge_deployer
-#    docker compose run scripts send-l1 --ethamount 1 --to validator --wait
-#    docker compose run scripts send-l1 --ethamount 1 --to sequencer --wait
-#    docker compose run scripts send-l1 --ethamount 1 --to l2owner --wait
-#    docker compose run scripts send-l1 --ethamount 1 --to user_token_bridge_deployer --wait
-
-
     l2ownerAddress=`docker compose run scripts print-address --account l2owner | tail -n 1 | tr -d '\r\n'`
     sequenceraddress=`docker compose run scripts print-address --account sequencer | tail -n 1 | tr -d '\r\n'`
     l2ownerKey=`docker compose run scripts print-private-key --account l2owner | tail -n 1 | tr -d '\r\n'`
     wasmroot=`docker compose run --entrypoint sh sequencer -c "cat /home/user/target/machines/latest/module-root.txt"`
 
-    if $l2anytrust; then
-        echo "== Writing l2 chain config (anytrust enabled)"
-        docker compose run scripts --l2owner $l2ownerAddress  write-l2-chain-config --anytrust
-    else
-        echo == Writing l2 chain config
-        docker compose run scripts --l2owner $l2ownerAddress  write-l2-chain-config
-    fi
-
-    EXTRA_L2_DEPLOY_FLAG=""
-    if $l2_custom_fee_token; then
-        echo == Deploying custom fee token
-        nativeTokenAddress=`docker compose run scripts create-erc20 --l1 --deployer user_fee_token_deployer --bridgeable $tokenbridge --decimals $l2_custom_fee_token_decimals | tail -n 1 | awk '{ print $NF }'`
-        docker compose run scripts transfer-erc20 --l1 --token $nativeTokenAddress --amount 10000 --from user_fee_token_deployer --to l2owner
-        docker compose run scripts transfer-erc20 --l1 --token $nativeTokenAddress --amount 10000 --from user_fee_token_deployer --to sequencer
-        EXTRA_L2_DEPLOY_FLAG="-e FEE_TOKEN_ADDRESS=$nativeTokenAddress"
-        if $l2_custom_fee_token_pricer; then
-            echo == Deploying custom fee token pricer
-            feeTokenPricerAddress=`docker compose run scripts create-fee-token-pricer --deployer user_fee_token_deployer | tail -n 1 | awk '{ print $NF }'`
-            EXTRA_L2_DEPLOY_FLAG="$EXTRA_L2_DEPLOY_FLAG -e FEE_TOKEN_PRICER_ADDRESS=$feeTokenPricerAddress"
-        fi
-    fi
+    docker compose run scripts --l2owner $l2ownerAddress  write-l2-chain-config
 
     echo == Deploying L2
-    docker compose run -e DEPLOYER_PRIVKEY=$l2ownerKey -e PARENT_CHAIN_RPC=$L1_HTTP_RPC_URL -e PARENT_CHAIN_ID=$L1_CHAIN_ID -e CHILD_CHAIN_NAME=$CHILD_CHAIN_NAME -e MAX_DATA_SIZE=104857 -e OWNER_ADDRESS=$l2ownerAddress -e WASM_MODULE_ROOT=$wasmroot -e SEQUENCER_ADDRESS=$sequenceraddress -e AUTHORIZE_VALIDATORS=10 -e CHILD_CHAIN_CONFIG_PATH="/config/l2_chain_config.json" -e CHAIN_DEPLOYMENT_INFO="/config/deployment.json" -e CHILD_CHAIN_INFO="/config/deployed_chain_info.json" $EXTRA_L2_DEPLOY_FLAG rollupcreator create-rollup-testnode
+    docker compose run -e DEPLOYER_PRIVKEY=$l2ownerKey -e PARENT_CHAIN_RPC=$L1_HTTP_RPC_URL -e PARENT_CHAIN_ID=$L1_CHAIN_ID -e CHILD_CHAIN_NAME=$CHILD_CHAIN_NAME -e MAX_DATA_SIZE=104857 -e OWNER_ADDRESS=$l2ownerAddress -e WASM_MODULE_ROOT=$wasmroot -e SEQUENCER_ADDRESS=$sequenceraddress -e AUTHORIZE_VALIDATORS=10 -e CHILD_CHAIN_CONFIG_PATH="/config/l2_chain_config.json" -e CHAIN_DEPLOYMENT_INFO="/config/deployment.json" -e CHILD_CHAIN_INFO="/config/deployed_chain_info.json" -e FEE_TOKEN_PRICER_ADDRESS=$ERC20_TOKEN_ADDRESS rollupcreator create-rollup-testnode
     docker compose run --entrypoint sh rollupcreator -c "jq [.[]] /config/deployed_chain_info.json > /config/l2_chain_info.json"
 
-    if $tokenbridge; then
-        echo == Deploying L1-L2 token bridge
-        deployer_key=`printf "%s" "user_token_bridge_deployer" | openssl dgst -sha256 | sed 's/^.*= //'`
-        rollupAddress=`docker compose run --entrypoint sh poster -c "jq -r '.[0].rollup.rollup' /config/deployed_chain_info.json | tail -n 1 | tr -d '\r\n'"`
-        l2Weth=""
-        docker compose run -e PARENT_WETH_OVERRIDE=$l2Weth -e ROLLUP_OWNER_KEY=$l2ownerkey -e ROLLUP_ADDRESS=$rollupAddress -e PARENT_RPC=$L1_HTTP_RPC_URL -e PARENT_KEY=$deployer_key  -e CHILD_RPC=http://sequencer:8547 -e CHILD_KEY=$deployer_key tokenbridge deploy:local:token-bridge
-        docker compose run --entrypoint sh tokenbridge -c "cat network.json && cp network.json l1l2_network.json && cp network.json localNetwork.json"
-        echo
-    fi
-fi # $force_init
-
-anytrustNodeConfigLine=""
-
-# Remaining init may require AnyTrust committee/mirrors to have been started
-if $l2anytrust; then
-    if $force_init; then
-        echo == Generating AnyTrust Config
-        docker compose run --user root --entrypoint sh datool -c "mkdir /das-committee-a/keys /das-committee-a/data /das-committee-a/metadata /das-committee-b/keys /das-committee-b/data /das-committee-b/metadata /das-mirror/data /das-mirror/metadata"
-        docker compose run --user root --entrypoint sh datool -c "chown -R 1000:1000 /das*"
-        docker compose run datool keygen --dir /das-committee-a/keys
-        docker compose run datool keygen --dir /das-committee-b/keys
-        docker compose run scripts write-l2-das-committee-config
-        docker compose run scripts write-l2-das-mirror-config
-
-        das_bls_a=`docker compose run --entrypoint sh datool -c "cat /das-committee-a/keys/das_bls.pub"`
-        das_bls_b=`docker compose run --entrypoint sh datool -c "cat /das-committee-b/keys/das_bls.pub"`
-
-        docker compose run scripts write-l2-das-keyset-config --dasBlsA $das_bls_a --dasBlsB $das_bls_b
-        docker compose run --entrypoint sh datool -c "/usr/local/bin/datool dumpkeyset --conf.file /config/l2_das_keyset.json | grep 'Keyset: ' | awk '{ printf \"%s\", \$2 }' > /config/l2_das_keyset.hex"
-        docker compose run scripts set-valid-keyset
-
-        anytrustNodeConfigLine="--anytrust --dasBlsA $das_bls_a --dasBlsB $das_bls_b"
-    fi
-
-    if $run; then
-        echo == Starting AnyTrust committee and mirror
-        docker compose up --wait das-committee-a das-committee-b das-mirror
-    fi
-fi
-
-if $force_init; then
     if $simple; then
         echo == Writing configs
-        docker compose run scripts write-config --simple $anytrustNodeConfigLine
+        docker compose run scripts write-config --simple
     else
         echo == Writing configs
-        docker compose run scripts write-config $anytrustNodeConfigLine
+        docker compose run scripts write-config
 
         echo == Initializing redis
         docker compose up --wait redis
-        docker compose run scripts redis-init --redundancy $redundantsequencers
+        docker compose run scripts redis-init --redundancy
     fi
-
-    echo == Funding l2 funnel and dev key
     docker compose up --wait $INITIAL_SEQ_NODES
-
-    echo == Fund L2 accounts
-    if $l2_custom_fee_token; then
-        docker compose run scripts bridge-native-token-to-l2 --amount 100 --from user_fee_token_deployer --wait
-        docker compose run scripts send-l2 --ethamount 10 --from user_fee_token_deployer --wait
-    else
-        docker compose run scripts bridge-funds --ethamount 10 --wait
-    fi
+    docker compose run scripts bridge-native-token-to-l2 --amount 100 --from l2owner --wait
     docker compose run scripts send-l2 --ethamount 10 --to l2owner --wait
 
     echo == Deploy CacheManager on L2
