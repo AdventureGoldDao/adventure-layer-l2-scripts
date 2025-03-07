@@ -5,11 +5,12 @@ nohup ../build/op-node \
 --sequencer.enabled \
 --sequencer.l1-confs=5 \
 --verifier.l1-confs=4 \
---rollup.config=../config/rollup.json \
+--rollup.config=./r.json \
 --rpc.addr=0.0.0.0 --rpc.port=8517  --rpc.enable-admin \
 --l1=$L1_RPC_URL --l1.rpckind=alchemy \
 --syncmode=consensus-layer \
 --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY \
 --p2p.listen.tcp=8505 \
 --p2p.listen.udp=8505 \
+--l1.trustrpc=true \
 > ./log/node.log &
