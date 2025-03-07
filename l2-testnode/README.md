@@ -30,10 +30,10 @@ Initialize the node
 
 ### Extract tokens from L1 erc20 to L2
 ```shell
-# cat tokenAddress is native-token in: docker compose run --entrypoint sh scripts -c "cat /config/deployment.json 
- ./test-node.bash script transfer-erc20 -l1 --token 0x***********Cf13dd6706 --amount 1000 --from l2owner --to adderss_0x454215***
+# cat tokenAddress is native-token in: docker compose run --entrypoint sh scripts -c "cat /config/deployment.json"  
+ ./test-node.bash script transfer-erc20 -l1 --token 0x***********Cf13dd6706 --amount 1000 --from l2owner --to l2owner
 
- ./test-node.bash script bridge-native-token-to-l2 --amount 10 --from l2owner --wait
+ ./test-node.bash script bridge-native-token-to-l2 --amount 5 --from l2owner --wait
 ```
 
 ### L2 token trading
@@ -50,3 +50,11 @@ For help and further scripts, see:
 ```shell
 docker compose run --entrypoint sh sequencer -c "ls /config"
 ```
+
+### up l1 gas config
+```shell
+cast send 0x0000000000000000000000000000000000000070 "SetL1PricePerUnit()" 0 --private-key l2ownerprvkey --rpc-url http://127.0.0.1:8547
+cast send 0x0000000000000000000000000000000000000070 "SetL1PricingRewardRate()" 0 --private-key l2ownerprvkey --rpc-url http://127.0.0.1:8547
+```
+
+
