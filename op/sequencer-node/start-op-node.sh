@@ -12,5 +12,4 @@ nohup ../build/op-node \
 --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY \
 --p2p.listen.tcp=8505 \
 --p2p.listen.udp=8505 \
---system_config.batcherAddr=$SHARD_BATCHER_ADDRESS
 > ./log/node.log &
