@@ -1,0 +1,28 @@
+# config is file op-geth/cmd/geth/config.go  gethConfig
+[Eth]
+NetworkId = 242070
+RollupSequencerHTTP = "" # http://sequencer-node:8515
+RollupDisableTxPoolGossip = true
+SyncMode="full"
+
+[Node]
+DataDir = "./datadir"
+HTTPHost = "0.0.0.0"
+HTTPPort = 8525
+HTTPCors = ["*"]
+HTTPVirtualHosts = ["*"]
+HTTPModules = ["web3", "debug", "eth", "txpool", "net", "engine", "admin"]
+WSHost = "0.0.0.0"
+WSPort = 8526
+WSOrigins = ["*"]
+WSModules = ["debug", "eth", "txpool", "net", "engine"]
+AuthVirtualHosts = ["*"]
+AuthAddr = "0.0.0.0"
+AuthPort = 8531
+JWTSecret = "./jwt.txt"
+
+[Node.P2P]
+MaxPeers=50
+ListenAddr = ":8505"
+NetRestrict = ["172.31.0.0/16"]
+StaticNodes = [""]

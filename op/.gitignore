@@ -1,0 +1,9 @@
+*.log
+.envrc
+.idea
+*.txt
+*/datadir
+*/opnode_discovery_db
+*/opnode_peerstore_db
+
+
