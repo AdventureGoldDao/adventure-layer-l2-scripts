@@ -27,17 +27,17 @@ key4=$(echo "$wallet4" | awk '/Private key/ { print $3 }')
 echo "Copy the following into your .envrc file:"
 echo
 echo "# Admin account"
-echo "export SHARD_ADMIN_ADDRESS=$address1"
-echo "export SHARD_ADMIN_PRIVATE_KEY=$key1"
+echo "export GS_ADMIN_ADDRESS=$address1"
+echo "export GS_ADMIN_PRIVATE_KEY=$key1"
 echo
 echo "# Batcher account"
-echo "export SHARD_BATCHER_ADDRESS=$address2"
-echo "export SHARD_BATCHER_PRIVATE_KEY=$key2"
+echo "export GS_BATCHER_ADDRESS=$address2"
+echo "export GS_BATCHER_PRIVATE_KEY=$key2"
 echo
 echo "# Proposer account"
-echo "export SHARD_PROPOSER_ADDRESS=$address3"
-echo "export SHARD_PROPOSER_PRIVATE_KEY=$key3"
+echo "export GS_PROPOSER_ADDRESS=$address3"
+echo "export GS_PROPOSER_PRIVATE_KEY=$key3"
 echo
 echo "# Sequencer account"
-echo "export SHARD_SEQUENCER_ADDRESS=$address4"
-echo "export SHARD_SEQUENCER_PRIVATE_KEY=$key4"
+echo "export GS_SEQUENCER_ADDRESS=$address4"
+echo "export GS_SEQUENCER_PRIVATE_KEY=$key4"
