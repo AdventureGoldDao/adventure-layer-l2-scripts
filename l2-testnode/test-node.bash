@@ -275,11 +275,12 @@ if $force_init; then
 
     docker compose up --wait $INITIAL_SEQ_NODES
     sleep 5
+    echo == send-l1 validator
+    docker compose run scripts send-l1 --ethamount 1.1 --from l2owner --to validator --wait
+
     echo == transfer-erc20 and bridge-token to-l2
     docker compose run scripts transfer-erc20 --token $ERC20_TOKEN_ADDRESS  --amount 100 --from l2owner --to sequencer
-    docker compose run scripts bridge-native-token-to-l2 --amount 5 --from l2owner --wait
-    docker compose run scripts send-l1 --ethamount 0.1 --from l2owner --to sequencer --wait
-    docker compose run scripts bridge-native-token-to-l2 --amount 5 --from sequencer --wait
+    docker compose run scripts bridge-native-token-to-l2 --amount 2 --from l2owner --wait
 
     echo == Deploy CacheManager on L2
     docker compose run -e CHILD_CHAIN_RPC="http://sequencer:8547" -e CHAIN_OWNER_PRIVKEY=$l2ownerKey rollupcreator deploy-cachemanager-testnode
