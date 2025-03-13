@@ -54,9 +54,13 @@ cd adventure-layer-l2-scripts/l2-testnode
 ```
 
 ### Write configuration file
+example:
+export L1_RPC_URL=wss://bepolia.rpc.berachain.com
+export L1_HTTP_RPC_URL=https://bepolia.rpc.berachain.com
+export L1_CHAIN_ID=80069
+
 ```shell
 cp .envrc.example .envrc
-
 direnv allow
 ```
 
@@ -104,7 +108,7 @@ cast send 0x0000000000000000000000000000000000000070 "SetL1PricePerUnit(uint256)
 cast send 0x0000000000000000000000000000000000000070 "SetL1PricingRewardRate(uint64)" 0 --private-key l2ownerprvkey --rpc-url http://127.0.0.1:8547
 ```
 
-# When shutting down the Docker image, it is important to allow a graceful shutdown to save the current state to disk. Here is an example of how to do a graceful shutdown of all docker images currently running
+# shutdown docker images gracefully
 ```shell
 docker stop --time=1800 $(docker ps -aq)
 ```
