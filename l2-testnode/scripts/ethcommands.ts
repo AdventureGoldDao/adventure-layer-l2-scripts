@@ -71,7 +71,7 @@ async function bridgeNativeToken(argv: any, parentChainUrl: string, chainUrl: st
   const nativeTokenContract = new ethers.Contract(token, ERC20.abi, bridgerParentChain)
 
   // scale deposit amount
-  const decimals = await nativeTokenContract.decimals()
+  const decimals = 18
   const depositAmount = BigNumber.from(argv.amount).mul(BigNumber.from('10').pow(decimals))
 
   /// approve inbox to use fee token
@@ -494,7 +494,7 @@ export const transferERC20Command = {
     }
     const account = namedAccount(argv.from).connect(argv.provider);
     const tokenContract = new ethers.Contract(argv.token, ERC20.abi, account);
-    const tokenDecimals = await tokenContract.decimals();
+    const tokenDecimals = 18;
     const amountToTransfer = BigNumber.from(argv.amount).mul(BigNumber.from('10').pow(tokenDecimals));
     await(await tokenContract.transfer(namedAccount(argv.to).address, amountToTransfer)).wait();
     argv.provider.destroy();
