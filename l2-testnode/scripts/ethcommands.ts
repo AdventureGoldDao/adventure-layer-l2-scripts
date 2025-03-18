@@ -20,6 +20,7 @@ async function sendTransaction(argv: any, threadId: number) {
                 value: ethers.utils.parseEther(argv.ethamount),
                 data: argv.data,
                 nonce: startNonce + index,
+                gasLimit:210_000
             })
         console.log(response)
         if (argv.wait) {
@@ -51,7 +52,7 @@ async function bridgeFunds(argv: any, parentChainUrl: string, chainUrl: string, 
       if (balance.gte(ethers.utils.parseEther(argv.ethamount))) {
         return
       }
-      await sleep(100)
+      await sleep(300)
     }
   }
 }
@@ -87,26 +88,12 @@ async function bridgeNativeToken(argv: any, parentChainUrl: string, chainUrl: st
   if (argv.wait) {
     const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-    // calculate amount being minted on child chain
-    let expectedMintedAmount = depositAmount
-    if(decimals < 18) {
-      // inflate up to 18 decimals
-      expectedMintedAmount = depositAmount.mul(BigNumber.from('10').pow(18 - decimals))
-    } else if(decimals > 18) {
-      // deflate down to 18 decimals, rounding up
-      const quotient = BigNumber.from('10').pow(decimals - 18)
-      expectedMintedAmount = depositAmount.div(quotient)
-      if(expectedMintedAmount.mul(quotient).lt(depositAmount)) {
-        expectedMintedAmount = expectedMintedAmount.add(1)
-      }
-    }
-
     while (true) {
       const bridgerBalanceAfter = await bridger.getBalance()
-      if (bridgerBalanceAfter.sub(bridgerBalanceBefore).eq(expectedMintedAmount)) {
+      if (bridgerBalanceAfter.sub(bridgerBalanceBefore).eq(depositAmount)) {
         return
       }
-      await sleep(100)
+      await sleep(300)
     }
   }
 }
@@ -268,13 +255,13 @@ export const bridgeNativeTokenToL2Command = {
     },
   },
   handler: async (argv: any) => {
-    const deploydata = JSON.parse(
-      fs
-        .readFileSync(path.join(consts.configpath, "deployment.json"))
-        .toString()
-    );
-    const inboxAddr = ethers.utils.hexlify(deploydata.inbox);
-    const nativeTokenAddr = ethers.utils.hexlify(deploydata["native-token"]);
+    // const deploydata = JSON.parse(
+    //   fs
+    //     .readFileSync(path.join(consts.configpath, "deployment.json"))
+    //     .toString()
+    // );
+    const inboxAddr = ethers.utils.hexlify("0x0823512873191219C7B6D77FD00178c35B9b1f2c");
+    const nativeTokenAddr = ethers.utils.hexlify("0x2ed75d42d89924e85913f9e48ed5f21b7547cb2e");
 
     argv.ethamount = "0"
     await bridgeNativeToken(argv, argv.l1url, argv.l2url, inboxAddr, nativeTokenAddr)
