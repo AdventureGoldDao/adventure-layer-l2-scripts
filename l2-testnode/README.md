@@ -15,7 +15,7 @@ direnv allow
 
 ### look address
 ```shell
-./test-node.bash script print-address --account user_fee_token_deployer
+./test-node.bash script print-address --account sequencer
 ```
 
 ### look address private-key
