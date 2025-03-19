@@ -68,13 +68,11 @@ while [[ $# -gt 0 ]]; do
                 fi
             fi
             build_utils=true
-            build_node_images=true
             shift
             ;;
         --init-force)
             force_init=true
             build_utils=true
-            build_node_images=true
             shift
             ;;
         --ci)
@@ -209,6 +207,14 @@ if $validate; then
 elif ! $simple; then
     NODES="$NODES staker-unsafe"
 fi
+
+if $build_node_images; then
+    containers=$(docker ps -a -q -f ancestor=nitro-node)
+    if [ -n "$containers" ]; then
+        docker stop $containers && docker rm $containers
+    fi
+fi
+
 if [[ "$(docker images -q nitro-node:latest 2> /dev/null)" == "" ]]; then
     echo == docker pull nitro
     docker pull $NITRO_NODE_VERSION
@@ -227,11 +233,6 @@ if $build_utils; then
     fi
     docker compose build --no-rm $UTILS_NOCACHE $LOCAL_BUILD_NODES
   fi
-fi
-
-
-if $build_node_images; then
-    docker compose build --no-rm $NODES
 fi
 
 if $force_init; then
