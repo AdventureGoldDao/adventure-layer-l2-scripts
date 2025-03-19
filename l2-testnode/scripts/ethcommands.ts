@@ -255,13 +255,13 @@ export const bridgeNativeTokenToL2Command = {
     },
   },
   handler: async (argv: any) => {
-    // const deploydata = JSON.parse(
-    //   fs
-    //     .readFileSync(path.join(consts.configpath, "deployment.json"))
-    //     .toString()
-    // );
-    const inboxAddr = ethers.utils.hexlify("0x0823512873191219C7B6D77FD00178c35B9b1f2c");
-    const nativeTokenAddr = ethers.utils.hexlify("0x2ed75d42d89924e85913f9e48ed5f21b7547cb2e");
+    const deploydata = JSON.parse(
+        fs
+            .readFileSync(path.join(consts.configpath, "deployment.json"))
+            .toString()
+    );
+    const inboxAddr = ethers.utils.hexlify(deploydata.inbox);
+    const nativeTokenAddr = ethers.utils.hexlify(deploydata["native-token"]);
 
     argv.ethamount = "0"
     await bridgeNativeToken(argv, argv.l1url, argv.l2url, inboxAddr, nativeTokenAddr)
