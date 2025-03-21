@@ -76,7 +76,14 @@ direnv allow
 ./test-node.bash script print-private-key --account l2owner
 ```
 
-### Ensure that L1 account has sufficient tokens
+### It's recommended to fund the addresses with the following amounts when using l1 ETH
+
+| account   | eth | desc                   |
+|-----------|-----|------------------------|
+| l2owner   | 2   | The owner of the chain |
+| sequencer | 1   | Package submitter      |
+| validator | 1.1 | validator              |
+
 ```shell
 #echo == send-l1 validator ./test-node.bash Every time an automatic call is executed
 #./test-node.bash script send-l1 --ethamount 1.1 --from l2owner --to validator --wait
