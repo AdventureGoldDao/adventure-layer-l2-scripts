@@ -1,0 +1,16 @@
+services:
+  sequencer:
+    pid: host # allow debugging
+    image: nitro-replica-node
+    entrypoint: /usr/local/bin/nitro
+    ports:
+      - "0.0.0.0:8557:8547"
+      - "0.0.0.0:8558:8548"
+    volumes:
+      - "seqdata:/home/user/.arbitrum/local/nitro"
+      - ./l1keystore:/home/user/l1keystore
+      - ./config:/config
+    command: --conf.file /config/sequencer_config.json --http.api=net,web3,eth --node.feed.input.url=$L2_FEED_URL
+
+volumes:
+  seqdata:
