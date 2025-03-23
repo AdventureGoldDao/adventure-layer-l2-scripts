@@ -46,7 +46,7 @@ nowait=false
 redundantsequencers=0
 batchposters=1
 simple=true
-
+l2anytrust=true
 
 
 # Rebuild docker images
@@ -256,28 +256,46 @@ if $force_init; then
     l2ownerKey=`docker compose run scripts print-private-key --account l2owner | tail -n 1 | tr -d '\r\n'`
     wasmroot=`docker compose run --entrypoint sh sequencer -c "cat /home/user/target/machines/latest/module-root.txt"`
 
-    docker compose run scripts --l2owner $l2ownerAddress  write-l2-chain-config
+    if $l2anytrust; then
+        echo "== Writing l2 chain config (anytrust enabled)"
+        docker compose run scripts --l2owner $l2ownerAddress  write-l2-chain-config --anytrust
+    else
+        echo == Writing l2 chain config
+        docker compose run scripts --l2owner $l2ownerAddress  write-l2-chain-config
+    fi
 
     echo == Deploying L2
     docker compose run -e DEPLOYER_PRIVKEY=$l2ownerKey -e PARENT_CHAIN_RPC=$L1_HTTP_RPC_URL -e PARENT_CHAIN_ID=$L1_CHAIN_ID -e CHILD_CHAIN_NAME=$CHILD_CHAIN_NAME -e MAX_DATA_SIZE=117964 -e OWNER_ADDRESS=$l2ownerAddress -e WASM_MODULE_ROOT=$wasmroot -e SEQUENCER_ADDRESS=$sequenceraddress -e AUTHORIZE_VALIDATORS=10 -e CHILD_CHAIN_CONFIG_PATH="/config/l2_chain_config.json" -e CHAIN_DEPLOYMENT_INFO="/config/deployment.json" -e CHILD_CHAIN_INFO="/config/deployed_chain_info.json" -e FEE_TOKEN_ADDRESS=$ERC20_TOKEN_ADDRESS rollupcreator create-rollup-testnode
     docker compose run --entrypoint sh rollupcreator -c "jq [.[]] /config/deployed_chain_info.json > /config/l2_chain_info.json"
 
-    if $simple; then
-        echo == Writing configs
-        docker compose run scripts write-config --simple
-    else
-        echo == Writing configs
-        docker compose run scripts write-config
+    anytrustNodeConfigLine=""
+    # Remaining init may require AnyTrust committee/mirrors to have been started
+    if $l2anytrust; then
+        echo == Generating AnyTrust Config
+        docker compose run --user root --entrypoint sh datool -c "mkdir /das-committee-a/keys /das-committee-a/data /das-committee-a/metadata /das-committee-b/keys /das-committee-b/data /das-committee-b/metadata /das-mirror/data /das-mirror/metadata"
+        docker compose run --user root --entrypoint sh datool -c "chown -R 1000:1000 /das*"
+        docker compose run datool keygen --dir /das-committee-a/keys
+        docker compose run datool keygen --dir /das-committee-b/keys
+        docker compose run scripts write-l2-das-committee-config
+        docker compose run scripts write-l2-das-mirror-config
 
-        echo == Initializing redis
-        docker compose up --wait redis
-        docker compose run scripts redis-init --redundancy
+        das_bls_a=`docker compose run --entrypoint sh datool -c "cat /das-committee-a/keys/das_bls.pub"`
+        das_bls_b=`docker compose run --entrypoint sh datool -c "cat /das-committee-b/keys/das_bls.pub"`
+
+        docker compose run scripts write-l2-das-keyset-config --dasBlsA $das_bls_a --dasBlsB $das_bls_b
+        docker compose run --entrypoint sh datool -c "/usr/local/bin/datool dumpkeyset --conf.file /config/l2_das_keyset.json | grep 'Keyset: ' | awk '{ printf \"%s\", \$2 }' > /config/l2_das_keyset.hex"
+        docker compose run scripts set-valid-keyset
+
+        anytrustNodeConfigLine="--anytrust --dasBlsA $das_bls_a --dasBlsB $das_bls_b"
     fi
+
+    docker compose run scripts write-config --simple $anytrustNodeConfigLine
+
 
     docker compose up --wait $INITIAL_SEQ_NODES
     sleep 5
     echo == send-l1 validator
-    docker compose run scripts send-l1 --ethamount 1.1 --from l2owner --to validator --wait
+#    docker compose run scripts send-l1 --ethamount 1.1 --from l2owner --to validator --wait
 
     echo == transfer-erc20 and bridge-token to-l2
     docker compose run scripts transfer-erc20 --token $ERC20_TOKEN_ADDRESS  --amount 100 --from l2owner --to sequencer
@@ -285,8 +303,13 @@ if $force_init; then
 
     echo == Deploy CacheManager on L2
     docker compose run -e CHILD_CHAIN_RPC="http://sequencer:8547" -e CHAIN_OWNER_PRIVKEY=$l2ownerKey rollupcreator deploy-cachemanager-testnode
-    # cast send 0x0000000000000000000000000000000000000070 "SetL1PricePerUnit(uint256)" 0 --private-key $l2ownerKey  --rpc-url http://sequencer:8547
-    # cast send 0x0000000000000000000000000000000000000070 "SetL1PricingRewardRate(uint64)" 0 --private-key $l2ownerKey  --rpc-url http://sequencer:8547
+fi
+
+if $l2anytrust; then
+    if $run; then
+        echo == Starting AnyTrust committee and mirror
+        docker compose up --wait das-committee-a das-committee-b das-mirror
+    fi
 fi
 
 if $run; then
