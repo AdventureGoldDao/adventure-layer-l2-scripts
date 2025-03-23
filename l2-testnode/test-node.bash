@@ -40,12 +40,12 @@ fi
 
 run=true
 ci=false
-validate=false
+validate=true
 detach=false
 nowait=false
 redundantsequencers=0
 batchposters=1
-simple=true
+simple=false
 l2anytrust=true
 
 
@@ -180,16 +180,6 @@ INITIAL_SEQ_NODES="sequencer"
 if ! $simple; then
     NODES="$NODES redis"
 fi
-if [ $redundantsequencers -gt 0 ]; then
-    NODES="$NODES sequencer_b"
-    INITIAL_SEQ_NODES="$INITIAL_SEQ_NODES sequencer_b"
-fi
-if [ $redundantsequencers -gt 1 ]; then
-    NODES="$NODES sequencer_c"
-fi
-if [ $redundantsequencers -gt 2 ]; then
-    NODES="$NODES sequencer_d"
-fi
 
 if [ $batchposters -gt 0 ] && ! $simple; then
     NODES="$NODES poster"
@@ -283,13 +273,23 @@ if $force_init; then
         das_bls_b=`docker compose run --entrypoint sh datool -c "cat /das-committee-b/keys/das_bls.pub"`
 
         docker compose run scripts write-l2-das-keyset-config --dasBlsA $das_bls_a --dasBlsB $das_bls_b
-        docker compose run --entrypoint sh datool -c "/usr/local/bin/datool dumpkeyset --conf.file /config/l2_das_keyset.json | grep 'Keyset: ' | awk '{ printf \"%s\", \$2 }' > /config/l2_das_keyset.hex"
+        docker compose run --user root --entrypoint sh datool -c "/usr/local/bin/datool dumpkeyset --conf.file /config/l2_das_keyset.json | grep 'Keyset: ' | awk '{ printf \"%s\", \$2 }' > /config/l2_das_keyset.hex"
         docker compose run scripts set-valid-keyset
 
         anytrustNodeConfigLine="--anytrust --dasBlsA $das_bls_a --dasBlsB $das_bls_b"
     fi
 
-    docker compose run scripts write-config --simple $anytrustNodeConfigLine
+    if $simple; then
+        echo == Writing configs
+        docker compose run scripts write-config --simple $anytrustNodeConfigLine
+    else
+        echo == Writing configs
+        docker compose run scripts write-config $anytrustNodeConfigLine
+
+        echo == Initializing redis
+        docker compose up --wait redis
+        docker compose run scripts redis-init --redundancy $redundantsequencers
+    fi
 
 
     docker compose up --wait $INITIAL_SEQ_NODES
@@ -298,8 +298,10 @@ if $force_init; then
 #    docker compose run scripts send-l1 --ethamount 1.1 --from l2owner --to validator --wait
 
     echo == transfer-erc20 and bridge-token to-l2
-    docker compose run scripts transfer-erc20 --token $ERC20_TOKEN_ADDRESS  --amount 100 --from l2owner --to sequencer
+#    docker compose run scripts transfer-erc20 --token $ERC20_TOKEN_ADDRESS  --amount 100 --from l2owner --to sequencer
     docker compose run scripts bridge-native-token-to-l2 --amount 1000 --from l2owner --wait
+    docker compose run scripts send-l2 --ethamount 10 --from l2owner --to validator --wait
+    docker compose run scripts send-l2 --ethamount 10 --from sequencer --to validator --wait
 
     echo == Deploy CacheManager on L2
     docker compose run -e CHILD_CHAIN_RPC="http://sequencer:8547" -e CHAIN_OWNER_PRIVKEY=$l2ownerKey rollupcreator deploy-cachemanager-testnode
