@@ -11,7 +11,7 @@ services:
     ports:
       - "0.0.0.0:8547:8547"
       - "0.0.0.0:8548:8548"
-      - "0.0.0.0:9642:9642"
+      - "0.0.0.0:8542:9642"
     volumes:
       - "seqdata:/home/user/.arbitrum/local/nitro"
       - "l1keystore:/home/user/l1keystore"
@@ -24,8 +24,8 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/nitro
     ports:
-      - "127.0.0.1:8647:8547"
-      - "127.0.0.1:8648:8548"
+      - "0.0.0.0:8557:8547"
+      - "0.0.0.0:8558:8548"
     volumes:
       - "seqdata_b:/home/user/.arbitrum/local/nitro"
       - "config:/config"
@@ -38,8 +38,8 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/nitro
     ports:
-      - "127.0.0.1:8747:8547"
-      - "127.0.0.1:8748:8548"
+      - "0.0.0.0:8567:8547"
+      - "0.0.0.0:8568:8548"
     volumes:
       - "seqdata_c:/home/user/.arbitrum/local/nitro"
       - "config:/config"
@@ -52,8 +52,8 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/nitro
     ports:
-      - "127.0.0.1:8847:8547"
-      - "127.0.0.1:8848:8548"
+      - "0.0.0.0:8587:8547"
+      - "0.0.0.0:8588:8548"
     volumes:
       - "seqdata_d:/home/user/.arbitrum/local/nitro"
       - "config:/config"
@@ -129,7 +129,7 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/nitro-val
     ports:
-      - "0.0.0.0:8949:8549"
+      - "0.0.0.0:8549:8549"
     volumes:
       - "config:/config"
     command: --conf.file /config/validation_node_config.json

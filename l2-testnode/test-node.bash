@@ -4,7 +4,7 @@ set -eu
 
 
 NITRO_NODE_VERSION=offchainlabs/nitro-node:v3.5.2-33d30c0
-DEFAULT_NITRO_CONTRACTS_VERSION="v2.1.1-beta.0"
+DEFAULT_NITRO_CONTRACTS_VERSION="v2.1.3"
 
 # The is the latest bold-merge commit in nitro-contracts at the time
 DEFAULT_BOLD_CONTRACTS_VERSION="42d80e40"
@@ -296,7 +296,7 @@ if $l2anytrust; then
 fi
 
 if $force_init; then
-  if $simple; then
+      if $simple; then
           echo == Writing configs
           docker compose run scripts write-config --simple $anytrustNodeConfigLine
       else
@@ -311,10 +311,10 @@ if $force_init; then
       docker compose up --wait $INITIAL_SEQ_NODES
       sleep 5
       echo == send-l1 validator
-  #    docker compose run scripts send-l1 --ethamount 1.1 --from l2owner --to validator --wait
+      docker compose run scripts send-l1 --ethamount 1.1 --from l2owner --to validator --wait
 
       echo == transfer-erc20 and bridge-token to-l2
-  #    docker compose run scripts transfer-erc20 --token $ERC20_TOKEN_ADDRESS  --amount 100 --from l2owner --to sequencer
+      #docker compose run scripts transfer-erc20 --token $ERC20_TOKEN_ADDRESS  --amount 100 --from l2owner --to sequencer
       docker compose run scripts bridge-native-token-to-l2 --amount 1000 --from l2owner --wait
       docker compose run scripts send-l2 --ethamount 10 --from l2owner --to validator --wait
       docker compose run scripts send-l2 --ethamount 10 --from l2owner --to sequencer --wait
