@@ -272,6 +272,7 @@ fi
 anytrustNodeConfigLine=""
 # Remaining init may require AnyTrust committee/mirrors to have been started
 if $l2anytrust; then
+  if $force_init; then
     echo == Generating AnyTrust Config
     docker compose run --user root --entrypoint sh datool -c "mkdir /das-committee-a/keys /das-committee-a/data /das-committee-a/metadata /das-committee-b/keys /das-committee-b/data /das-committee-b/metadata /das-mirror/data /das-mirror/metadata"
     docker compose run --user root --entrypoint sh datool -c "chown -R 1000:1000 /das*"
@@ -288,7 +289,7 @@ if $l2anytrust; then
     docker compose run scripts set-valid-keyset
 
     anytrustNodeConfigLine="--anytrust --dasBlsA $das_bls_a --dasBlsB $das_bls_b"
-
+  fi
     if $run; then
         echo == Starting AnyTrust committee and mirror
         docker compose up --wait das-committee-a das-committee-b das-mirror
