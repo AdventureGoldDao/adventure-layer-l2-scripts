@@ -43,7 +43,7 @@ ci=false
 validate=true
 detach=false
 nowait=false
-redundantsequencers=0
+redundantsequencers=2
 batchposters=1
 simple=false
 l2anytrust=true
@@ -179,6 +179,16 @@ INITIAL_SEQ_NODES="sequencer"
 
 if ! $simple; then
     NODES="$NODES redis"
+fi
+if [ $redundantsequencers -gt 0 ]; then
+    NODES="$NODES sequencer_b"
+    INITIAL_SEQ_NODES="$INITIAL_SEQ_NODES sequencer_b"
+fi
+if [ $redundantsequencers -gt 1 ]; then
+    NODES="$NODES sequencer_c"
+fi
+if [ $redundantsequencers -gt 2 ]; then
+    NODES="$NODES sequencer_d"
 fi
 
 if [ $batchposters -gt 0 ] && ! $simple; then
