@@ -16,7 +16,6 @@ services:
       - "seqdata:/home/user/.arbitrum/local/nitro"
       - "l1keystore:/home/user/l1keystore"
       - "config:/config"
-      - "tokenbridge-data:/tokenbridge-data"
     command: --conf.file /config/sequencer_config.json --node.feed.output.enable --node.feed.output.port 9642  --http.api net,web3,eth,txpool,debug --node.seq-coordinator.my-url  ws://sequencer:8548 --graphql.enable --graphql.vhosts * --graphql.corsdomain *
 
   sequencer_b:
@@ -143,7 +142,6 @@ services:
     volumes:
       - "l1keystore:/home/user/l1keystore"
       - "config:/config"
-      - "tokenbridge-data:/tokenbridge-data"
 
   relay:
     pid: host
@@ -152,21 +150,6 @@ services:
     ports:
       - "0.0.0.0:9652:9652"
     command: --chain.id 412346 --node.feed.input.url ws://sequencer:9642 --node.feed.output.port 9652
-
-  tokenbridge:
-    depends_on:
-      - sequencer
-    pid: host
-    build:
-      context: tokenbridge/
-      args:
-        TOKEN_BRIDGE_BRANCH: ${TOKEN_BRIDGE_BRANCH:-}
-    environment:
-      - ARB_URL=http://sequencer:8547
-      - ETH_URL=$L1_HTTP_RPC_URL
-    volumes:
-      - "tokenbridge-data:/workspace"
-      - /var/run/docker.sock:/var/run/docker.sock
 
   rollupcreator:
     depends_on:
@@ -240,7 +223,6 @@ volumes:
   poster-data-b:
   poster-data-c:
   config:
-  tokenbridge-data:
   das-committee-a-data:
   das-committee-b-data:
   das-mirror-data:
