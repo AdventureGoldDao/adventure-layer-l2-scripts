@@ -11,12 +11,11 @@ services:
     ports:
       - "0.0.0.0:8547:8547"
       - "0.0.0.0:8548:8548"
-      - "0.0.0.0:9642:9642"
+      - "0.0.0.0:8542:9642"
     volumes:
       - "seqdata:/home/user/.arbitrum/local/nitro"
       - "l1keystore:/home/user/l1keystore"
       - "config:/config"
-      - "tokenbridge-data:/tokenbridge-data"
     command: --conf.file /config/sequencer_config.json --node.feed.output.enable --node.feed.output.port 9642  --http.api net,web3,eth,txpool,debug --node.seq-coordinator.my-url  ws://sequencer:8548 --graphql.enable --graphql.vhosts * --graphql.corsdomain *
 
   sequencer_b:
@@ -24,8 +23,8 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/nitro
     ports:
-      - "0.0.0.0:8647:8547"
-      - "0.0.0.0:8648:8548"
+      - "0.0.0.0:8557:8547"
+      - "0.0.0.0:8558:8548"
     volumes:
       - "seqdata_b:/home/user/.arbitrum/local/nitro"
       - "config:/config"
@@ -38,8 +37,8 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/nitro
     ports:
-      - "0.0.0.0:8747:8547"
-      - "0.0.0.0:8748:8548"
+      - "0.0.0.0:8567:8547"
+      - "0.0.0.0:8568:8548"
     volumes:
       - "seqdata_c:/home/user/.arbitrum/local/nitro"
       - "config:/config"
@@ -52,8 +51,8 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/nitro
     ports:
-      - "0.0.0.0:8847:8547"
-      - "0.0.0.0:8848:8548"
+      - "0.0.0.0:8587:8547"
+      - "0.0.0.0:8588:8548"
     volumes:
       - "seqdata_d:/home/user/.arbitrum/local/nitro"
       - "config:/config"
@@ -108,21 +107,6 @@ services:
     depends_on:
       - redis
 
-  poster_c:
-    pid: host # allow debugging
-    image: nitro-node
-    entrypoint: /usr/local/bin/nitro
-    ports:
-      - "0.0.0.0:9247:8547"
-      - "0.0.0.0:9248:8548"
-    volumes:
-      - "poster-data-c:/home/user/.arbitrum/local/nitro"
-      - "l1keystore:/home/user/l1keystore"
-      - "config:/config"
-    command: --conf.file /config/poster_config.json
-    depends_on:
-      - redis
-
   validator:
     pid: host # allow debugging
     image: nitro-node
@@ -144,7 +128,7 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/nitro-val
     ports:
-      - "0.0.0.0:8949:8549"
+      - "0.0.0.0:8549:8549"
     volumes:
       - "config:/config"
     command: --conf.file /config/validation_node_config.json
@@ -158,7 +142,6 @@ services:
     volumes:
       - "l1keystore:/home/user/l1keystore"
       - "config:/config"
-      - "tokenbridge-data:/tokenbridge-data"
 
   relay:
     pid: host
@@ -167,21 +150,6 @@ services:
     ports:
       - "0.0.0.0:9652:9652"
     command: --chain.id 412346 --node.feed.input.url ws://sequencer:9642 --node.feed.output.port 9652
-
-  tokenbridge:
-    depends_on:
-      - sequencer
-    pid: host
-    build:
-      context: tokenbridge/
-      args:
-        TOKEN_BRIDGE_BRANCH: ${TOKEN_BRIDGE_BRANCH:-}
-    environment:
-      - ARB_URL=http://sequencer:8547
-      - ETH_URL=$L1_HTTP_RPC_URL
-    volumes:
-      - "tokenbridge-data:/workspace"
-      - /var/run/docker.sock:/var/run/docker.sock
 
   rollupcreator:
     depends_on:
@@ -209,8 +177,8 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/daserver
     ports:
-      - "0.0.0.0:9876:9876"
-      - "0.0.0.0:9877:9877"
+      - "0.0.0.0:8516:9876"
+      - "0.0.0.0:8517:9877"
     volumes:
       - "config:/config"
       - "das-committee-a-data:/das"
@@ -222,8 +190,8 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/daserver
     ports:
-      - "0.0.0.0:8876:9876"
-      - "0.0.0.0:8877:9877"
+      - "0.0.0.0:8518:9876"
+      - "0.0.0.0:8819:9877"
     volumes:
       - "config:/config"
       - "das-committee-b-data:/das"
@@ -235,7 +203,7 @@ services:
     image: nitro-node
     entrypoint: /usr/local/bin/daserver
     ports:
-      - "0.0.0.0:7877:9877"
+      - "0.0.0.0:8520:9877"
     volumes:
       - "config:/config"
       - "das-mirror-data:/das"
@@ -248,13 +216,13 @@ volumes:
   seqdata_b:
   seqdata_c:
   seqdata_d:
+  replica:
   unsafestaker-data:
   validator-data:
   poster-data:
   poster-data-b:
   poster-data-c:
   config:
-  tokenbridge-data:
   das-committee-a-data:
   das-committee-b-data:
   das-mirror-data:
