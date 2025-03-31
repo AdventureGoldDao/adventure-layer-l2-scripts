@@ -209,7 +209,7 @@ function writeConfigs(argv: any) {
                 "disable-challenge": false,
                 "enable": false,
                 "staker-interval": "10s",
-                "make-assertion-interval": "10s",
+                "make-assertion-interval": "1h",
                 "strategy": "MakeNodes",
             },
             "sequencer": false,
@@ -233,7 +233,7 @@ function writeConfigs(argv: any) {
             "batch-poster": {
                 "enable": false,
                 "redis-url": argv.redisUrl,
-                "max-delay": "30s",
+                "max-delay": "1h",
                 "l1-block-bound": "ignore",
                 "parent-chain-wallet" : {
                     "account": namedAddress("sequencer"),
