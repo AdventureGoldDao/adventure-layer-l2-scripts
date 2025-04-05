@@ -68,7 +68,7 @@ direnv allow
 
 ### look address
 ```shell
-./test-node.bash script print-address --account l2owner
+./test-node.bash script print-address --account sequencer
 ```
 
 ### look address private-key
@@ -93,41 +93,15 @@ echo == send-l1 sequencer
 
 Initialize the node 
 ```bash
-./test-node.bash --init
-```
-
-### Extract tokens from L1 erc20 to L2
-```shell
-# cat tokenAddress is native-token in: docker compose run --entrypoint sh scripts -c "cat /config/deployment.json"  
- ./test-node.bash script transfer-erc20 -l1 --token 0x***********Cf13dd6706 --amount 1000 --from l2owner --to sequencer
-
- ./test-node.bash script bridge-native-token-to-l2 --amount 5 --from l2owner --wait
-```
-
-### L2 token trading
-```bash
-./test-node.bash script send-l2 --to address_0x1111222233334444555566667777888899990000
-```
-
-For help and further scripts, see:
-```bash
-./test-node.bash script --help
-```
-
-### cat config
-```shell
-docker compose run --entrypoint sh sequencer -c "ls /config"
+./test-node.bash --init --detach
 ```
 
 ### up l1 gas config
+https://docs.arbitrum.io/launch-orbit-chain/configure-your-chain/common-configurations/fee-management
 ```shell
-cast send 0x0000000000000000000000000000000000000070 "SetL1PricePerUnit(uint256)" 0 --private-key l2ownerprvkey --rpc-url http://127.0.0.1:8547
-cast send 0x0000000000000000000000000000000000000070 "SetL1PricingRewardRate(uint64)" 0 --private-key l2ownerprvkey --rpc-url http://127.0.0.1:8547
+cast send --rpc-url $L2_CHAIN_RPC --private-key $OWNER_PRIVATE_KEY 0x0000000000000000000000000000000000000070 "setL1PricePerUnit(uint256) ()" 0
+cast send --rpc-url $L2_CHAIN_RPC --private-key $OWNER_PRIVATE_KEY 0x0000000000000000000000000000000000000070 "setL1PricingRewardRate(uint64) ()" 0
 ```
 
-## shutdown docker images gracefully
-```shell
-docker stop --time=1800 $(docker ps -aq)
-```
 
 

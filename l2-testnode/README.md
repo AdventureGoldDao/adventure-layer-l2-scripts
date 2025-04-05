@@ -25,20 +25,20 @@ direnv allow
 
 Initialize the node 
 ```bash
-./test-node.bash --init
+./test-node.bash --init --detach
 ```
 
 ### Extract tokens from L1 erc20 to L2
 ```shell
 # cat tokenAddress is native-token in: docker compose run --entrypoint sh scripts -c "cat /config/deployment.json"  
- ./test-node.bash script transfer-erc20 -l1 --token 0x***********Cf13dd6706 --amount 1000 --from l2owner --to sequencer
+ ./test-node.bash script transfer-erc20 --l1 --token 0x***********Cf13dd6706 --amount 1000 --from l2owner --to sequencer
 
  ./test-node.bash script bridge-native-token-to-l2 --amount 5 --from l2owner --wait
 ```
 
 ### L2 token trading
 ```bash
-./test-node.bash script send-l2 --to address_0x1111222233334444555566667777888899990000
+./test-node.bash script send-l2 --to --from l2owner address_0x1111222233334444555566667777888899990000
 ```
 
 For help and further scripts, see:
@@ -53,8 +53,8 @@ docker compose run --entrypoint sh sequencer -c "ls /config"
 
 ### up l1 gas config
 ```shell
-cast send 0x0000000000000000000000000000000000000070 "SetL1PricePerUnit(uint256)" 0 --private-key l2ownerprvkey --rpc-url http://127.0.0.1:8547
-cast send 0x0000000000000000000000000000000000000070 "SetL1PricingRewardRate(uint64)" 0 --private-key l2ownerprvkey --rpc-url http://127.0.0.1:8547
+cast send --rpc-url $L2_CHAIN_RPC --private-key $OWNER_PRIVATE_KEY 0x0000000000000000000000000000000000000070 "setL1PricePerUnit(uint256) ()" 0
+cast send --rpc-url $L2_CHAIN_RPC --private-key $OWNER_PRIVATE_KEY 0x0000000000000000000000000000000000000070 "setL1PricingRewardRate(uint64) ()" 0
 ```
 
 # When shutting down the Docker image, it is important to allow a graceful shutdown to save the current state to disk. Here is an example of how to do a graceful shutdown of all docker images currently running
