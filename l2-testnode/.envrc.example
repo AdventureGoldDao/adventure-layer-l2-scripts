@@ -2,7 +2,6 @@
 export L1_MNEMONIC="xxx xxx xxx xxx xxx xxx xxx xx xxx xxxx xxxx xxx"
 #./run_l2.bash script print-address --account l2owner
 export L2_OWNER_ADDRESS=0x*******
-export OWNER_PRIVATE_KEY=0x*******
 
 export L1_RPC_URL=
 export L1_HTTP_RPC_URL=

@@ -320,6 +320,10 @@ if $force_init; then
       docker compose run scripts send-l2 --ethamount 10 --from l2owner --to validator --wait
       docker compose run scripts send-l2 --ethamount 10 --from l2owner --to sequencer --wait
 
+      echo == up l1 gas config
+      cast send --rpc-url ws://sequencer:8548 --private-key $l2ownerKey 0x0000000000000000000000000000000000000070 "setL1PricePerUnit(uint256) ()" 0
+      cast send --rpc-url ws://sequencer:8548 --private-key $l2ownerKey 0x0000000000000000000000000000000000000070 "setL1PricingRewardRate(uint64) ()" 0
+
       echo == Deploy CacheManager on L2
       docker compose run -e CHILD_CHAIN_RPC="http://sequencer:8547" -e CHAIN_OWNER_PRIVKEY=$l2ownerKey rollupcreator deploy-cachemanager-testnode
 fi

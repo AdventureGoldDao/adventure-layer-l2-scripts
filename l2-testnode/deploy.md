@@ -96,12 +96,6 @@ Initialize the node
 ./test-node.bash --init --detach
 ```
 
-### up l1 gas config
-https://docs.arbitrum.io/launch-orbit-chain/configure-your-chain/common-configurations/fee-management
-```shell
-cast send --rpc-url $L2_CHAIN_RPC --private-key $OWNER_PRIVATE_KEY 0x0000000000000000000000000000000000000070 "setL1PricePerUnit(uint256) ()" 0
-cast send --rpc-url $L2_CHAIN_RPC --private-key $OWNER_PRIVATE_KEY 0x0000000000000000000000000000000000000070 "setL1PricingRewardRate(uint64) ()" 0
-```
 
 
 
